@@ -1,0 +1,11 @@
+# envfile-patch.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: landing-page-api
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        envFile: "new-env-file-path"  # update with your new value
