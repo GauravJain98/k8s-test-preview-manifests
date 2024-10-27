@@ -8,4 +8,5 @@ spec:
   source:
     helm:
       valuesObject:
-        envFile: "new-env-file-path"  # update with your new value
+        envFile: |
+          Changed Envfile
