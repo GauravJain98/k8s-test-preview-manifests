@@ -1,0 +1,100 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: landing-page-api
+  namespace: argocd
+spec:
+  project: haven1
+  source:
+    repoURL: https://github.com/haven1network/charts-helm
+    path: haven1-application
+    targetRevision: main
+    helm:
+      valuesObject:
+        replicaCount: 2
+        image:
+          repository: 775131611055.dkr.ecr.ap-southeast-2.amazonaws.com/haven1/landing-page-server
+          pullPolicy: IfNotPresent
+          # Overrides the image tag whose default is the chart appVersion.
+          tag: 1.104.0
+        service:
+          port: 2000
+          ## DO NOT TOUCH THIS
+        envFile: |-
+          NODE_ENV=staging
+          LOG_LEVEL=debug
+          REDIS_URL=redis://hvn1-staging-landing-page-server.gibjay.ng.0001.apse2.cache.amazonaws.com:6379
+          JWT_KEY=ec772fafeb72c49077dd3a1ad4541eb24d239af1
+          CHAIN_ID=8110
+          RPC_URL=https://rpc.staging.haven1.org
+          TURNSTILE_SECRET_KEY=0x4AAAAAAAiKLU3kGfotgKUjg87FW1iy1Hw
+          ID_ISSUER_KEY=289da9cab58b0842fe2a1e139bfeded717c4944ead694601926130b93732b5e1
+          FAUCET_KEY=6d83e6bcb602be4f4ac112ff1e12d3a5fbb17e521f292f3358b6116cecf59b7e
+          PROOF_OF_IDENTITY_CONTRACT=0xd635521BA9c5694a2237EA94f2455aBfdDF41ef9
+          H1_FAUCET_AMOUNT=1000
+          WS_PATH=/socket.io
+          DEPLOYMENT_DOMAIN=staging.haven1.org
+          DISCORD_TOKEN=MTEyODUxOTU1MjQwMjE5NDQ2NA.GhqNLt.9yd5VVaGWdfE9SHSRMXCaGexACDAcmtVdYUSxY
+          DISCORD_CLIENT_ID=1128519552402194464
+          DISCORD_CLIENT_SECRET=AbuR5lQVFeSw4US5ZeUX7CgbKodGA9LX
+          DISCORD_GUILD_ID=1123619300536746006
+          DISCORD_AUTH_REDIRECT=https://staging.haven1.org/verify
+          DISCORD_REQUIRE_MFA=false
+          PGHOST=landing-page-staging.c8g93o7avpc3.ap-southeast-2.rds.amazonaws.com
+          PGUSER=r_backend
+          PGDATABASE=landing_page
+          PGPASSWORD=LDR9UAZboENIQCS
+          PGPORT=5432
+          SENDGRID_API_KEY=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
+          STRAPI_URL=https://staging-cms.haven1.org
+          STRAPI_ACCESS_TOKEN=c8d938a1fb25fcf7a9faa803094bdb954098eb1827a6109f407157ca8f40c20bce996e1f8333e69df5b9085205c5867c37183f318b33cbb6df6168ef4b172f5cf4f5b07ece31308fc877e56ba4953ec8f2cef0d86da340cd55dcfe518a18699842866263dbe0b0cd4c408bff5df9ed804282f6b2f32dd77b2d05daa7e5685e41
+          PROOF_OF_IDENTITY_CONTRACT_V2=0xd635521BA9c5694a2237EA94f2455aBfdDF41ef9
+          CORS=https://staging-portal.haven1.org,https://staging.haven1.org,https://testnet.haven1.org,https://haven1.org,https://www.haven1.org,http://localhost:3000,http://localhost:3001
+          TESTENV=1
+          NFT_SECRET_KEY=71b18778277dc79f7ceb3a94ce6f1a36284851a9
+          NFT_SECRET_ENCRYPTION_IV=0d7eea183c2558250034fb27a6614c924883dd5e
+        ingress:
+          enabled: true
+          annotations:
+            nginx.ingress.kubernetes.io/affinity: "cookie"
+            nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+            nginx.ingress.kubernetes.io/session-cookie-name: "landingpage"
+            nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+          hosts:
+            - host: api.staging.haven1.org
+              paths:
+                - path: /
+                  pathType: ImplementationSpecific
+        resources: {}
+        # We usually recommend not to specify default resources and to leave this as a conscious
+        # choice for the user. This also increases chances charts run on environments with little
+        # resources, such as Minikube. If you do want to specify resources, uncomment the following
+        # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+        # limits:
+        #   cpu: 100m
+        #   memory: 128Mi
+        # requests:
+        #   cpu: 100m
+        #   memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 5
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 3
+          periodSeconds: 10
+          initialDelaySeconds: 60
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: landing-page
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

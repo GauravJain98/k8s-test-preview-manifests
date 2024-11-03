@@ -1,0 +1,8 @@
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+# Make the url of the base image sticking to the your main manfiests repo 
+patches:
+- path: app-envfile-patch.yaml
